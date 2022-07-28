@@ -1,0 +1,49 @@
+server:
+  port: ${PORT:8181}
+
+spring:
+  application:
+    name: API-GATEWAY
+  mvc:
+    async:
+      request-timeout: 5000
+  cloud:
+    gateway:
+      routes:
+        - id: authorization
+          uri: lb://AUTHORIZATION
+          predicates:
+            - Path=/authorization/**
+        - id: pension-processing
+          uri: https://PROCESS-PENSION
+          predicates:
+            - Path=/pension-processing/**
+          filters:
+            - name: AuthenticationFilter
+              args:
+                authenticationUrl: lb://AUTHORIZATION
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedHeaders: "*"
+            allowedMethods:
+              - GET
+              - POST
+
+logging:
+  file:
+    name: /var/logs/api-gateway.log
+    path: /var/logs
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
